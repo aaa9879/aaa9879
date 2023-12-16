@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <title>社課資訊</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+
+        #class-info-header {
+            background-color: rgba(8, 119, 143, 0.75);
+            padding: 10px;
+            text-align: center;
+            color: white;
+        }
+
+        .class-info {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 5px 10px;
+            cursor: pointer;
+            background-color: #FADDA5;
+            border: none;
+            color: #333;
+        }
+
+        .not-graded {
+            color: red; /* or any other color you prefer for "not graded" */
+        }
+
+        #add-class-form {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #past-signups-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="class-info-header">
+    <h1>社課報名</h1>
+</div>
+
+<div id="class-info-container"></div>
+
+<div id="past-signups-container"></div>
+
+<script>
+	function getAllCourse(){
+		$.ajax({
+                type: "GET",
+                url: "api/course.do",
+                crossDomain: true,
+                cache: false,
+                dataType: 'json',
+                timeout: 5000,
+                success: function (response) {
+                     var firstObject = response.response.data[0];
+        	             updateCourse(response.response.data);
+	                     console.log(response);
+                },
+                error: function () {
+                    alert("無法連線到伺服器！");
+                }
+        });
+	}
+	var classes=[];
+	function updateCourse(data){
+		classes = [];
+		for (const course of data) {
+        	const courseInfo = {
+	            course_name: course.course_name,
+	            course_start_time: course.course_start_time,
+	            teacher_id: course.member_id,
+	            course_time: course.course_time,
+	            course_location: course.course_location
+	        };
+	        console.log(course);
+	        classes.push(courseInfo);
+		}
+	    displayClassInfo();
+	}
+	$(document).ready(function() {
+	    getAllCourse();
+	});
+    
+
+    const signedUpClasses = [];
+
+    function displayClassInfo() {
+        const container = document.getElementById("class-info-container");
+
+        container.innerHTML = ""; // Clear existing content
+
+        classes.forEach((classInfo, index) => {
+            const classDiv = document.createElement("div");
+            classDiv.classList.add("class-info");
+
+            const signUpButton = document.createElement("button");
+            signUpButton.textContent = "報名";
+            signUpButton.addEventListener("click", () => handleSignUp(index));
+            classDiv.appendChild(signUpButton);
+
+            const infoText = document.createTextNode(`課名: ${classInfo.course_name}, 時間: ${classInfo.course_time}, 地點: ${classInfo.course_location}, 老師id: ${classInfo.teacher_id}`);
+            classDiv.appendChild(infoText);
+
+            container.appendChild(classDiv);
+        });
+    }
+
+    function handleSignUp(index) {
+        const signedUpClass = classes[index];
+        signedUpClasses.push(signedUpClass);
+
+        // Display past sign-ups
+        displayPastSignUps();
+
+        // Remove the signed-up class from the available classes
+        classes.splice(index, 1);
+
+        // Update the displayed classes
+        displayClassInfo();
+    }
+
+    function displayPastSignUps() {
+        const pastSignUpsContainer = document.getElementById("past-signups-container");
+
+        pastSignUpsContainer.innerHTML = ""; // Clear existing content
+
+        if (signedUpClasses.length > 0) {
+            const heading = document.createElement("h2");
+            heading.textContent = "已報名社課列表";
+            pastSignUpsContainer.appendChild(heading);
+
+            signedUpClasses.forEach((classInfo) => {
+                const classDiv = document.createElement("div");
+                classDiv.classList.add("class-info");
+
+                const infoText = document.createTextNode(`課名: ${classInfo.course_name}, 時間: ${classInfo.course_time}, 地點: ${classInfo.course_location}, 老師id: ${classInfo.teacher_id}`);
+                classDiv.appendChild(infoText);
+
+                // Add Rating, Submit Assignment, and Correction buttons
+                const ratingButton = document.createElement("button");
+                ratingButton.textContent = "評分";
+              	 ratingButton.addEventListener("click", () => handleRating());
+                classDiv.appendChild(ratingButton);
+
+                const submitAssignmentButton = document.createElement("button");
+                submitAssignmentButton.textContent = "繳交作業";
+                submitAssignmentButton.addEventListener("click", () => handleSubmitAssignment());
+                classDiv.appendChild(submitAssignmentButton);
+
+				const cancelRegistrationButton = document.createElement("button");
+                submitAssignmentButton.textContent = "取消報名";
+                submitAssignmentButton.addEventListener("click", () => handlecancelRegistration());
+                classDiv.appendChild(submitAssignmentButton);
+
+                const notGradedText = document.createElement("span");
+                notGradedText.textContent = "尚未批改";
+                notGradedText
+                notGradedText.classList.add("not-graded");
+                classDiv.appendChild(notGradedText);
+
+                pastSignUpsContainer.appendChild(classDiv);
+            });
+        }
+    }
+
+    function handleRating() {
+        window.location.href = "classRating.html";
+    }
+
+    function handleSubmitAssignment() {
+		 window.location.href = "submitHomework.html";
+    }
+	function handlecancelRegistration() {
+		
+    }
+    displayClassInfo();
+</script>
+
+</body>
+</html>
